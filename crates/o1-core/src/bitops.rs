@@ -204,25 +204,31 @@ macro_rules! width_module {
 
 width_module!(
     /// Bit operations on `u8`.
-    u8, u8
+    u8,
+    u8
 );
 width_module!(
     /// Bit operations on `u16`.
-    u16, u16
+    u16,
+    u16
 );
 width_module!(
     /// Bit operations on `u32`.
-    u32, u32
+    u32,
+    u32
 );
 width_module!(
     /// Bit operations on `u64`.
-    u64, u64
+    u64,
+    u64
 );
 width_module!(
     /// Bit operations on `u128`.
-    u128, u128
+    u128,
+    u128
 );
 width_module!(
     /// Bit operations on `usize`.
-    usize, usize
+    usize,
+    usize
 );
