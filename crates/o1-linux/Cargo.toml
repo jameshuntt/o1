@@ -1,0 +1,17 @@
+[package]
+name = "o1-linux"
+description = "Explicit Linux ABI layer (x86_64, aarch64): raw syscalls without libc, futex wait/wake, framed Unix-domain stream I/O. Linux-specific."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+authors.workspace = true
+
+[dependencies]
+o1-core.workspace = true
+
+[dev-dependencies]
+proptest.workspace = true
+
+[lints]
+workspace = true

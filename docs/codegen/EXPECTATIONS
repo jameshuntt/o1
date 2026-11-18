@@ -1,0 +1,93 @@
+# <cfg> <probe-name substring> <present|absent> <extended regex>
+# Each line is checked against the function body recorded in docs/codegen/<cfg>.s.
+#
+# Bit scans: one scan instruction; zero handled without a branch.
+x86_64-baseline probe_trailing_zero_count_u64 present rep[[:space:]]+bsfq
+x86_64-baseline probe_trailing_zero_count_u64 absent  ^[[:space:]]*j
+x86_64-bmi      probe_trailing_zero_count_u64 present tzcntq
+x86_64-bmi      probe_leading_zero_count_u64  present lzcntq
+x86_64-baseline probe_leading_zero_count_u64  present bsrq
+x86_64-bmi      probe_pop_count_u64           present popcntq
+x86_64-bmi      probe_isolate_lowest_u64      present blsiq
+aarch64         probe_trailing_zero_count_u64 present rbit
+aarch64         probe_trailing_zero_count_u64 present clz
+aarch64         probe_leading_zero_count_u64  present clz
+aarch64         probe_pop_count_u64           present cnt
+# Out-of-range handling compiles without branches.
+x86_64-baseline probe_mask_low_u64            absent  ^[[:space:]]*j
+aarch64         probe_mask_low_u64            absent  ^[[:space:]]*b\.
+x86_64-baseline probe_bit_test_u64            absent  ^[[:space:]]*j
+aarch64         probe_bit_test_u64            absent  ^[[:space:]]*b\.
+# Selection: the plain `if` already becomes cmov/csel; the masked form is folded into it.
+x86_64-baseline probe_select_u64              present cmov
+aarch64         probe_select_u64              present csel
+x86_64-baseline probe_select_masked_u64       present alias[[:space:]]of.*probe_select_u64
+aarch64         probe_select_masked_u64       present alias[[:space:]]of.*probe_select_u64
+# Tagged pointer: tag read is one AND; raw untag is one AND.
+x86_64-baseline probe_tagged_tag              present andl[[:space:]]+\$7
+aarch64         probe_tagged_tag              present and[[:space:]]+x0,[[:space:]]*x0,[[:space:]]*#0x7
+x86_64-baseline probe_tagged_as_ptr           present andq[[:space:]]+\$-8
+x86_64-baseline probe_tagged_as_ptr           absent  cmov
+aarch64         probe_tagged_as_ptr           absent  csel
+# Syscall wrappers: the instruction and number register as documented.
+o1-linux-x86_64  4wake                        present ^[[:space:]]*syscall
+o1-linux-x86_64  4wake                        present movl[[:space:]]+\$202,[[:space:]]*%eax
+o1-linux-aarch64 4wake                        present svc[[:space:]]+#0
+o1-linux-aarch64 4wake                        present mov[[:space:]]+w8,[[:space:]]*#98
+o1-linux-x86_64  16wait_while_equal           present ^[[:space:]]*syscall
+o1-linux-x86_64  10send_frame                 present movl[[:space:]]+\$46,[[:space:]]*%eax
+o1-linux-aarch64 10send_frame                 present #211
+o1-linux-x86_64  10recv_frame                 present ^[[:space:]]*syscall
+o1-linux-aarch64 10recv_frame                 present #63
+# No branch instruction in these bodies (x86: any jcc/jmp; aarch64: b., cbz/cbnz, tbz/tbnz, b).
+x86_64-baseline probe_trailing_zero_count_u32 absent  ^[[:space:]]*j
+x86_64-baseline probe_leading_zero_count_u64  absent  ^[[:space:]]*j
+x86_64-baseline probe_first_set_u64           absent  ^[[:space:]]*j
+x86_64-baseline probe_last_set_u64            absent  ^[[:space:]]*j
+x86_64-baseline probe_select_u64              absent  ^[[:space:]]*j
+x86_64-baseline probe_tagged_tag              absent  ^[[:space:]]*j
+x86_64-baseline probe_tagged_untag            absent  ^[[:space:]]*j
+x86_64-bmi      probe_trailing_zero_count_u64 absent  ^[[:space:]]*j
+x86_64-bmi      probe_first_set_u64           absent  ^[[:space:]]*j
+aarch64         probe_trailing_zero_count_u32 absent  ^[[:space:]]*(b\.|cbn?z|tbn?z|b[[:space:]])
+aarch64         probe_trailing_zero_count_u64 absent  ^[[:space:]]*(b\.|cbn?z|tbn?z|b[[:space:]])
+aarch64         probe_leading_zero_count_u64  absent  ^[[:space:]]*(b\.|cbn?z|tbn?z|b[[:space:]])
+aarch64         probe_first_set_u64           absent  ^[[:space:]]*(b\.|cbn?z|tbn?z|b[[:space:]])
+aarch64         probe_last_set_u64            absent  ^[[:space:]]*(b\.|cbn?z|tbn?z|b[[:space:]])
+aarch64         probe_select_u64              absent  ^[[:space:]]*(b\.|cbn?z|tbn?z|b[[:space:]])
+aarch64         probe_tagged_tag              absent  ^[[:space:]]*(b\.|cbn?z|tbn?z|b[[:space:]])
+aarch64         probe_tagged_untag            absent  ^[[:space:]]*(b\.|cbn?z|tbn?z|b[[:space:]])
+x86_64-baseline probe_tagged_untag            present cmov
+aarch64         probe_tagged_untag            present csel
+# Controls: the branch regexes do match real branches (these bodies contain one).
+o1-linux-x86_64  4wake                        present ^[[:space:]]*j
+o1-linux-aarch64 10recv_frame                 present ^[[:space:]]*(b\.|cbn?z|tbn?z|b[[:space:]])
+# Policy erasure (unit 2): a BlockPass with a zero-sized execution policy compiles to the same
+# code as the same pass without one (LLVM folds the two symbols into an alias).
+x86_64-baseline probe_block_transform_policy  present alias[[:space:]]of.*probe_block_transform_plain
+x86_64-bmi      probe_block_transform_policy  present alias[[:space:]]of.*probe_block_transform_plain
+aarch64         probe_block_transform_policy  present alias[[:space:]]of.*probe_block_transform_plain
+x86_64-baseline probe_block_read_policy       present alias[[:space:]]of.*probe_block_read_plain
+x86_64-bmi      probe_block_read_policy       present alias[[:space:]]of.*probe_block_read_plain
+aarch64         probe_block_read_policy       present alias[[:space:]]of.*probe_block_read_plain
+# The portable pass: callback inlined, no panic path, ordinary (not non-temporal) stores,
+# even though the policied probe requests non-temporal writes.
+x86_64-baseline probe_block_transform_plain   absent  call
+aarch64         probe_block_transform_plain   absent  (^|[[:space:]])bl[[:space:]]
+x86_64-baseline probe_block_transform_plain   absent  movnt
+x86_64-bmi      probe_block_transform_plain   absent  movnt
+aarch64         probe_block_transform_plain   absent  stnp
+x86_64-baseline probe_block_transform_plain   present movups
+aarch64         probe_block_transform_plain   present (str|stp)[[:space:]]+q
+# SPSC push/pop (unit 3): the default build has no verification counters (no thread-local
+# access, no call into a counting type); the release store / acquire load are still there.
+x86_64-baseline probe_spsc_push_u64           absent  (tls|TLS|counting|call)
+x86_64-baseline probe_spsc_pop_u64            absent  (tls|TLS|counting|call)
+aarch64         probe_spsc_push_u64           absent  (tls|TLS|tpidr|counting|(^|[[:space:]])bl[[:space:]])
+aarch64         probe_spsc_pop_u64            absent  (tls|TLS|tpidr|counting|(^|[[:space:]])bl[[:space:]])
+aarch64         probe_spsc_push_u64           present stlr
+aarch64         probe_spsc_pop_u64            present ldar
+# Positive control: with o1-sync's `access-counting` feature the same probes do reach the
+# counters (so the absence checks above can fail).
+x86_64-counting probe_spsc_push_u64           present counting
+x86_64-counting probe_spsc_pop_u64            present __tls_get_addr

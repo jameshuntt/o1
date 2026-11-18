@@ -1,0 +1,19 @@
+[package]
+name = "o1-codegen-probe"
+description = "Non-generic wrappers around o1-core operations (bit operations, tagged pointers, block passes with and without a policy, SPSC push/pop), compiled to assembly by scripts/codegen.sh."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[features]
+# Positive control for the SPSC probes: build them with o1-sync's verification counters.
+access-counting = ["o1-sync/access-counting"]
+
+[dependencies]
+o1-contract.workspace = true
+o1-core.workspace = true
+o1-sync.workspace = true
+
+[lints]
+workspace = true

@@ -1,0 +1,29 @@
+[package]
+name = "o1-core"
+description = "OS-independent, allocation-free substrate: bit operations, strict-provenance tagged pointers, fixed-capacity collections, generational arena, sans-IO framing."
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+publish = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+readme = "README.md"
+documentation = "https://docs.rs/o1-core"
+keywords = ["no-std", "arena", "ring-buffer", "tagged-pointer", "framing"]
+categories = ["no-std", "no-std::no-alloc", "data-structures", "memory-management"]
+
+[dependencies]
+o1-contract.workspace = true
+
+[dev-dependencies]
+proptest.workspace = true
+criterion.workspace = true
+
+[lints]
+workspace = true
+
+[[bench]]
+name = "core"
+harness = false

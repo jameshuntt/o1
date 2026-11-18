@@ -1,0 +1,23 @@
+[package]
+name = "o1-contract"
+description = "Vocabulary for bounded execution: zero-sized execution-intent policies, execution contracts and multidimensional resource envelopes. No dependencies, no unsafe."
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+publish = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+readme = "README.md"
+documentation = "https://docs.rs/o1-contract"
+keywords = ["execution-contract", "resource-envelope", "policy", "bounded", "no-std"]
+categories = ["no-std", "no-std::no-alloc"]
+
+[dependencies]
+
+[dev-dependencies]
+proptest.workspace = true
+
+[lints]
+workspace = true

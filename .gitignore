@@ -1,0 +1,8 @@
+target/
+Cargo.lock.bak
+*.profraw
+# Custodian (`custodian init`, Unit 5): config and the 1o project file are kept; the journal,
+# job lock, receipts and experiment data are runtime state (results are copied into evidence/).
+.custodian/state/
+.custodian/jobs.lock
+.custodian/data/
