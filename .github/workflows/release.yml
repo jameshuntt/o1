@@ -117,8 +117,11 @@ jobs:
     needs: verify
     runs-on: ubuntu-latest
     environment: release
+    # One group per crate: GitHub keeps a single waiting job per group and cancels older waiting
+    # ones, so a shared group would cancel releases of different crates tagged close together.
+    # Ordering between crates is enforced by the dependency check in `verify`.
     concurrency:
-      group: crates-io-release
+      group: crates-io-release-${{ needs.verify.outputs.crate }}
       cancel-in-progress: false
     permissions:
       contents: read
